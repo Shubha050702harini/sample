@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FreeAI.dir — Free AI Tools Directory</title>
+<style>
+  :root{
+    --bg:#07090d; --panel:#0d1117; --panel2:#121821; --line:#1f2a37;
+    --text:#d6e2f0; --dim:#7d8da1; --accent:#2ee6a6; --accent2:#4da3ff; --warn:#ffb454;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", "Fira Code", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg); color:var(--text); font-family:var(--sans); min-height:100vh;
+    background-image:
+      linear-gradient(rgba(46,230,166,.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(46,230,166,.035) 1px, transparent 1px);
+    background-size:36px 36px;
+  }
+  body::before{ /* subtle glow */
+    content:""; position:fixed; inset:0; pointer-events:none;
+    background:radial-gradient(900px 400px at 15% -5%, rgba(77,163,255,.12), transparent 60%),
+               radial-gradient(700px 400px at 90% 0%, rgba(46,230,166,.10), transparent 60%);
+  }
+  a{color:inherit;text-decoration:none}
+  .wrap{max-width:1240px;margin:0 auto;padding:0 20px;position:relative}
+
+  /* top bar */
+  .topbar{border-bottom:1px solid var(--line);background:rgba(7,9,13,.85);backdrop-filter:blur(8px);position:sticky;top:0;z-index:20}
+  .topbar .wrap{display:flex;align-items:center;justify-content:space-between;height:48px;font-family:var(--mono);font-size:12px;color:var(--dim)}
+  .dots{display:flex;gap:6px;margin-right:12px}
+  .dots i{width:10px;height:10px;border-radius:50%;background:#2a3544;display:block}
+  .dots i:nth-child(1){background:#ff5f56}.dots i:nth-child(2){background:#ffbd2e}.dots i:nth-child(3){background:#27c93f}
+  .brand{display:flex;align-items:center;color:var(--text)}
+  .status{display:flex;align-items:center;gap:8px}
+  .pulse{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 0 rgba(46,230,166,.6);animation:pulse 2s infinite}
+  @keyframes pulse{70%{box-shadow:0 0 0 8px rgba(46,230,166,0)}100%{box-shadow:0 0 0 0 rgba(46,230,166,0)}}
+
+  /* hero */
+  .hero{padding:56px 0 28px}
+  .prompt{font-family:var(--mono);color:var(--accent);font-size:13px;margin-bottom:14px}
+  .prompt span{color:var(--dim)}
+  h1{font-family:var(--mono);font-size:clamp(28px,5vw,48px);line-height:1.1;letter-spacing:-.02em}
+  h1 em{font-style:normal;color:var(--accent)}
+  .caret{display:inline-block;width:.55em;height:1em;background:var(--accent);vertical-align:-.12em;margin-left:4px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  .sub{max-width:660px;color:var(--dim);margin-top:16px;line-height:1.6;font-size:15px}
+  .stats{display:flex;gap:28px;margin-top:26px;font-family:var(--mono);flex-wrap:wrap}
+  .stat b{display:block;font-size:24px;color:var(--text)}
+  .stat small{color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:.1em}
+
+  /* controls */
+  .controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:28px 0 8px}
+  .search{flex:1;min-width:240px;position:relative}
+  .search input{
+    width:100%;background:var(--panel);border:1px solid var(--line);border-radius:8px;color:var(--text);
+    padding:13px 52px 13px 38px;font-family:var(--mono);font-size:14px;outline:none;transition:.15s;
+  }
+  .search input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(46,230,166,.12)}
+  .search .gt{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--accent);font-family:var(--mono)}
+  .kbd{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:4px;padding:2px 7px;background:var(--panel2)}
+  .toggle{display:flex;align-items:center;gap:9px;font-family:var(--mono);font-size:12px;color:var(--dim);cursor:pointer;user-select:none;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+  .toggle input{accent-color:var(--accent)}
+  .toggle:hover{border-color:#2d3b4d}
+
+  /* layout */
+  .layout{display:grid;grid-template-columns:230px 1fr;gap:28px;padding:18px 0 70px}
+  .cats{position:sticky;top:68px;align-self:start;display:flex;flex-direction:column;gap:4px;max-height:calc(100vh - 90px);overflow:auto}
+  .cats h3{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--dim);margin:2px 0 8px}
+  .cat{
+    display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:left;
+    background:transparent;border:1px solid transparent;color:var(--dim);font-family:var(--mono);font-size:13px;
+    padding:9px 12px;border-radius:7px;cursor:pointer;transition:.12s;
+  }
+  .cat:hover{background:var(--panel);color:var(--text)}
+  .cat.active{background:var(--panel2);border-color:var(--line);color:var(--accent);box-shadow:inset 2px 0 0 var(--accent)}
+  .cat .n{font-size:11px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:1px 8px;color:var(--dim)}
+
+  .section-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;font-family:var(--mono)}
+  .section-head h2{font-size:16px}
+  .section-head h2 span{color:var(--accent)}
+  .section-head small{color:var(--dim);font-size:12px}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+  .card{
+    display:flex;flex-direction:column;gap:12px;background:linear-gradient(180deg,var(--panel2),var(--panel));
+    border:1px solid var(--line);border-radius:12px;padding:16px;position:relative;overflow:hidden;
+    transition:transform .15s, border-color .15s, box-shadow .15s;
+  }
+  .card::after{content:"";position:absolute;left:0;top:0;height:2px;width:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));opacity:0;transition:.2s}
+  .card:hover{transform:translateY(-3px);border-color:#2f4156;box-shadow:0 10px 30px -12px rgba(46,230,166,.25)}
+  .card:hover::after{opacity:1}
+  .card:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .row{display:flex;align-items:center;gap:12px}
+  .ico{
+    width:42px;height:42px;border-radius:10px;background:#0a0f16;border:1px solid var(--line);flex:none;
+    display:grid;place-items:center;overflow:hidden;font-family:var(--mono);font-weight:700;color:var(--accent);font-size:16px;
+  }
+  .ico img{width:26px;height:26px;display:block}
+  .name{font-weight:600;font-size:15px}
+  .host{font-family:var(--mono);font-size:11px;color:var(--dim);margin-top:2px}
+  .go{margin-left:auto;font-family:var(--mono);color:var(--dim);transition:.15s}
+  .card:hover .go{color:var(--accent);transform:translate(2px,-2px)}
+  .desc{font-size:13.5px;line-height:1.55;color:#a9b8ca;flex:1}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{font-family:var(--mono);font-size:10.5px;padding:3px 8px;border-radius:5px;border:1px solid var(--line);color:var(--dim);background:#0a0f16}
+  .chip.out{color:var(--accent2);border-color:rgba(77,163,255,.3)}
+  .chip.none{color:var(--accent);border-color:rgba(46,230,166,.35)}
+  .chip.free{color:var(--dim)}
+  .note{font-family:var(--mono);font-size:11px;color:var(--warn);display:flex;gap:6px;line-height:1.4}
+  .empty{border:1px dashed var(--line);border-radius:12px;padding:44px;text-align:center;color:var(--dim);font-family:var(--mono)}
+
+  footer{border-top:1px solid var(--line);padding:26px 0 40px;font-family:var(--mono);font-size:12px;color:var(--dim);line-height:1.7}
+  footer b{color:var(--warn);font-weight:600}
+
+  @media (max-width:860px){
+    .layout{grid-template-columns:1fr}
+    .cats{position:static;flex-direction:row;overflow-x:auto;max-height:none;padding-bottom:6px}
+    .cats h3{display:none}
+    .cat{white-space:nowrap}
+    .cat.active{box-shadow:none}
+    .status span.hide-sm{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <div class="brand"><div class="dots"><i></i><i></i><i></i></div>freeai.dir ~ /tools</div>
+    <div class="status"><div class="pulse"></div><span class="hide-sm">index: online · curated 2026-11-20</span></div>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="prompt">$ <span>ls</span> ./free-ai-tools <span>--generate --download --free</span></div>
+    <h1>Free AI tools,<br>sorted by <em>what they make</em><span class="caret"></span></h1>
+    <p class="sub">A domain-by-domain directory of AI tools where you can generate content and export it without paying. Pick a category, click a card, land straight on the tool.</p>
+    <div class="stats">
+      <div class="stat"><b id="statTools">0</b><small>tools indexed</small></div>
+      <div class="stat"><b id="statCats">0</b><small>domains</small></div>
+      <div class="stat"><b id="statNoLogin">0</b><small>no sign-up needed</small></div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="controls">
+    <label class="search">
+      <span class="gt">&gt;</span>
+      <input id="q" type="search" placeholder="search tools, formats, e.g. pptx, mp3, logo…" autocomplete="off" aria-label="Search tools">
+      <span class="kbd">/</span>
+    </label>
+    <label class="toggle"><input type="checkbox" id="nologin"> no sign-up only</label>
+  </div>
+
+  <div class="layout">
+    <nav class="cats" id="cats" aria-label="Categories"><h3>// domains</h3></nav>
+    <section>
+      <div class="section-head"><h2 id="title">~/<span>all</span></h2><small id="count"></small></div>
+      <div class="grid" id="grid"></div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <b>Heads up:</b> "free" changes fast. Credits, watermarks, resolution caps and export options are set by each provider and may differ from the notes here. Always check the tool's own pricing page.<br>
+    Links go to each tool's official site and open in a new tab. Shortcuts: <b style="color:var(--accent)">/</b> to search, <b style="color:var(--accent)">Esc</b> to clear.<br>
+    To add a tool, append an object to the <b style="color:var(--accent)">TOOLS</b> array in this file's script.
+  </div>
+</footer>
+
+<script>
+/* ---------- DATA ----------
+   login: "none" = usable without account, "optional" = limited without account, "free" = free account needed
+   Edit/add entries here. */
+const CATEGORIES = [
+  {id:"text",   label:"Text Generation"},
+  {id:"image",  label:"Image Generation"},
+  {id:"ppt",    label:"Presentations"},
+  {id:"video",  label:"Video Generation"},
+  {id:"audio",  label:"Audio & Music"},
+  {id:"code",   label:"Code & Apps"},
+  {id:"diagram",label:"Diagrams & Design"},
+  {id:"edit",   label:"Image Editing"},
+  {id:"speech", label:"Transcription & Translation"}
+];
+
+const TOOLS = [
+  /* TEXT */
+  {n:"ChatGPT", u:"https://chatgpt.com", c:"text", login:"optional", d:"General-purpose chat assistant for writing, summaries, brainstorming and Q&A.", out:["Copy","Share link","Files"], note:"Free tier has message limits."},
+  {n:"Claude", u:"https://claude.ai", c:"text", login:"free", d:"Long-form writing, analysis and document work. Can produce downloadable files.", out:["Copy","MD","Files"], note:"Free plan has usage limits."},
+  {n:"Gemini", u:"https://gemini.google.com", c:"text", login:"free", d:"Google's assistant with easy export of responses to Docs and Gmail.", out:["Copy","Docs export"], note:"Google account required."},
+  {n:"Perplexity", u:"https://www.perplexity.ai", c:"text", login:"optional", d:"Answer engine that writes cited, sourced responses.", out:["Copy","Share link"], note:"Pro features are limited on free."},
+  {n:"Le Chat (Mistral)", u:"https://chat.mistral.ai", c:"text", login:"free", d:"Fast chat assistant from Mistral AI for drafting and rewriting.", out:["Copy"], note:"Daily caps apply."},
+  {n:"DeepSeek", u:"https://chat.deepseek.com", c:"text", login:"free", d:"Open-weights-family chat model, strong at reasoning and code.", out:["Copy"], note:"Availability can fluctuate under load."},
+  {n:"HuggingChat", u:"https://huggingface.co/chat", c:"text", login:"optional", d:"Chat with a rotating set of open-source models.", out:["Copy"], note:"Model lineup changes."},
+
+  /* IMAGE */
+  {n:"Microsoft Designer", u:"https://designer.microsoft.com", c:"image", login:"free", d:"Text-to-image and social/poster design with templates.", out:["PNG","JPG"], note:"Microsoft account needed."},
+  {n:"Leonardo AI", u:"https://leonardo.ai", c:"image", login:"free", d:"High-quality image generation with style presets and daily free tokens.", out:["PNG"], note:"Daily token allowance."},
+  {n:"Ideogram", u:"https://ideogram.ai", c:"image", login:"free", d:"Known for accurate text rendered inside images (posters, logos).", out:["PNG"], note:"Free credits; public gallery by default."},
+  {n:"Adobe Firefly", u:"https://firefly.adobe.com", c:"image", login:"free", d:"Commercially-oriented image generation from Adobe.", out:["JPG","PNG"], note:"Monthly credits; may add a content credential."},
+  {n:"Craiyon", u:"https://www.craiyon.com", c:"image", login:"none", d:"Quick, simple text-to-image with no account.", out:["PNG"], note:"Watermark and slower queue on free."},
+  {n:"Perchance AI Image", u:"https://perchance.org/ai-text-to-image-generator", c:"image", login:"none", d:"Unlimited, no-login text-to-image in the browser.", out:["PNG"], note:"Basic quality; community-run."},
+  {n:"Playground", u:"https://playground.com", c:"image", login:"free", d:"Image generator and canvas editor with a free daily quota.", out:["PNG","JPG"], note:"Daily generation cap."},
+
+  /* PPT */
+  {n:"Gamma", u:"https://gamma.app", c:"ppt", login:"free", d:"Prompt-to-deck generator; also produces docs and web pages.", out:["PPTX","PDF"], note:"Starts with free credits; branding may appear."},
+  {n:"Canva Presentations", u:"https://www.canva.com/presentations/", c:"ppt", login:"free", d:"Magic Design builds slide decks from a prompt, with a huge template library.", out:["PPTX","PDF","PNG"], note:"Some assets/features are Pro-only."},
+  {n:"SlidesAI", u:"https://www.slidesai.io", c:"ppt", login:"free", d:"Turns text into Google Slides or PowerPoint decks.", out:["PPTX","Google Slides"], note:"Limited presentations per month on free."},
+
+  /* VIDEO */
+  {n:"Pika", u:"https://pika.art", c:"video", login:"free", d:"Text-to-video and image-to-video with effects.", out:["MP4"], note:"Free credits; watermark likely."},
+  {n:"Luma Dream Machine", u:"https://lumalabs.ai/dream-machine", c:"video", login:"free", d:"Cinematic text/image-to-video generations.", out:["MP4"], note:"Limited free generations."},
+  {n:"Hailuo AI", u:"https://hailuoai.video", c:"video", login:"free", d:"Video generation with strong motion and prompt adherence.", out:["MP4"], note:"Daily/starter credits."},
+  {n:"Kling AI", u:"https://klingai.com", c:"video", login:"free", d:"Text and image-to-video with daily free credits.", out:["MP4"], note:"Watermark and queue on free."},
+  {n:"Runway", u:"https://runwayml.com", c:"video", login:"free", d:"Pro-grade generative video and editing suite.", out:["MP4"], note:"One-time credits; watermark on free."},
+
+  /* AUDIO */
+  {n:"Suno", u:"https://suno.com", c:"audio", login:"free", d:"Generate full songs with vocals from a text prompt.", out:["MP3"], note:"Daily credits; non-commercial use on free."},
+  {n:"Udio", u:"https://www.udio.com", c:"audio", login:"free", d:"AI music generation with fine control over style.", out:["MP3"], note:"Credit-limited; check current download terms."},
+  {n:"ElevenLabs", u:"https://elevenlabs.io", c:"audio", login:"free", d:"Realistic text-to-speech and voice generation.", out:["MP3"], note:"Monthly character quota; attribution on free."},
+  {n:"NotebookLM", u:"https://notebooklm.google.com", c:"audio", login:"free", d:"Upload sources and generate podcast-style Audio Overviews.", out:["Audio","Notes"], note:"Daily generation limits."},
+  {n:"TTSMaker", u:"https://ttsmaker.com", c:"audio", login:"none", d:"Free text-to-speech in many languages and voices.", out:["MP3","WAV"], note:"Character limits per request."},
+  {n:"NaturalReaders", u:"https://www.naturalreaders.com", c:"audio", login:"none", d:"Text-to-speech reader with natural voices.", out:["Playback"], note:"Downloads/premium voices are paid."},
+
+  /* CODE */
+  {n:"Google AI Studio", u:"https://aistudio.google.com", c:"code", login:"free", d:"Prototype with Gemini models and generate working app code.", out:["Code","Export"], note:"Google account; rate limits."},
+  {n:"GitHub Copilot", u:"https://github.com/features/copilot", c:"code", login:"free", d:"In-editor completions and chat; has a free tier.", out:["Code"], note:"Monthly completion/chat limits."},
+  {n:"Bolt.new", u:"https://bolt.new", c:"code", login:"free", d:"Prompt-to-full-stack web app in the browser.", out:["ZIP","Code"], note:"Token-limited free usage."},
+  {n:"v0", u:"https://v0.app", c:"code", login:"free", d:"Generate React/Tailwind UI components from prompts.", out:["Code"], note:"Monthly credits."},
+  {n:"Replit", u:"https://replit.com", c:"code", login:"free", d:"Cloud IDE with an AI agent to scaffold and run projects.", out:["ZIP","Code"], note:"Free plan limits agent usage."},
+  {n:"Hugging Face Spaces", u:"https://huggingface.co/spaces", c:"code", login:"none", d:"Thousands of community-hosted AI demos, many free to use.", out:["Varies"], note:"Quality and quotas vary per Space."},
+
+  /* DIAGRAM */
+  {n:"Napkin AI", u:"https://www.napkin.ai", c:"diagram", login:"free", d:"Turns text into editable infographics and visuals.", out:["PNG","SVG","PDF"], note:"Free plan has export/credit limits."},
+  {n:"Eraser", u:"https://www.eraser.io", c:"diagram", login:"free", d:"AI diagram-as-code for architecture and flow diagrams.", out:["PNG","SVG"], note:"Free tier limits files/AI uses."},
+  {n:"Excalidraw", u:"https://excalidraw.com", c:"diagram", login:"none", d:"Whiteboard-style diagrams, with text-to-diagram help.", out:["PNG","SVG"], note:"AI features may have daily limits."},
+
+  /* EDIT */
+  {n:"remove.bg", u:"https://www.remove.bg", c:"edit", login:"none", d:"Instant background removal.", out:["PNG"], note:"Free download is low resolution."},
+  {n:"Clipdrop", u:"https://clipdrop.co", c:"edit", login:"free", d:"Background removal, relighting, upscaling and cleanup tools.", out:["PNG","JPG"], note:"Free daily limits."},
+  {n:"Upscayl", u:"https://upscayl.org", c:"edit", login:"none", d:"Open-source AI image upscaler that runs on your own machine.", out:["PNG","JPG"], note:"Desktop app, needs a decent GPU."},
+  {n:"Photoroom", u:"https://www.photoroom.com/tools/background-remover", c:"edit", login:"optional", d:"Background removal and product-photo cleanup.", out:["PNG","JPG"], note:"Watermark on some free exports."},
+
+  /* SPEECH */
+  {n:"TurboScribe", u:"https://turboscribe.ai", c:"speech", login:"free", d:"Fast audio/video transcription with multiple export formats.", out:["TXT","DOCX","SRT"], note:"Limited files per day on free."},
+  {n:"Otter.ai", u:"https://otter.ai", c:"speech", login:"free", d:"Meeting transcription and summaries.", out:["TXT","SRT"], note:"Monthly minutes cap; exports limited."},
+  {n:"DeepL Translator", u:"https://www.deepl.com/translator", c:"speech", login:"none", d:"High-quality text translation; document upload with limits.", out:["Copy","DOCX","PPTX"], note:"Free doc translation is size/count limited."}
+];
+
+/* ---------- STATE ---------- */
+let activeCat = "all";
+const $ = s => document.querySelector(s);
+const q = $("#q"), grid = $("#grid"), catsEl = $("#cats"), nologin = $("#nologin");
+
+const catLabel = id => (CATEGORIES.find(c => c.id === id) || {label:"All tools"}).label;
+const host = u => new URL(u).hostname.replace(/^www\./,"");
+const esc = s => String(s).replace(/[&<>"']/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+
+const loginChip = l => l==="none" ? '<span class="chip none">no sign-up</span>'
+                    : l==="optional" ? '<span class="chip free">sign-up optional</span>'
+                    : '<span class="chip free">free account</span>';
+
+function filtered(){
+  const term = q.value.trim().toLowerCase();
+  return TOOLS.filter(t => {
+    if (activeCat !== "all" && t.c !== activeCat) return false;
+    if (nologin.checked && t.login === "free") return false;
+    if (!term) return true;
+    const hay = [t.n, t.d, catLabel(t.c), t.out.join(" "), host(t.u)].join(" ").toLowerCase();
+    return term.split(/\s+/).every(w => hay.includes(w));
+  });
+}
+
+function card(t){
+  const h = host(t.u);
+  const fav = "https://www.google.com/s2/favicons?domain=" + encodeURIComponent(h) + "&sz=64";
+  return `
+  <a class="card" href="${esc(t.u)}" target="_blank" rel="noopener noreferrer" aria-label="Open ${esc(t.n)}">
+    <div class="row">
+      <div class="ico"><img src="${fav}" alt="" loading="lazy" onerror="this.remove();this.parentNode&&(this.parentNode.textContent='${esc(t.n[0])}')"></div>
+      <div><div class="name">${esc(t.n)}</div><div class="host">${esc(h)}</div></div>
+      <div class="go">↗</div>
+    </div>
+    <div class="desc">${esc(t.d)}</div>
+    <div class="chips">${t.out.map(o=>`<span class="chip out">${esc(o)}</span>`).join("")}${loginChip(t.login)}</div>
+    <div class="note"><span>!</span><span>${esc(t.note)}</span></div>
+  </a>`;
+}
+
+function render(){
+  const list = filtered();
+  $("#title").innerHTML = "~/<span>" + esc(catLabel(activeCat).toLowerCase().replace(/ & /g,"-").replace(/\s+/g,"-")) + "</span>";
+  $("#count").textContent = list.length + " result" + (list.length===1?"":"s");
+  grid.innerHTML = list.length ? list.map(card).join("")
+    : '<div class="empty">// no matches.<br>try a different keyword or clear filters.</div>';
+  // counts per category respecting search + login filters (not category)
+  const term = q.value.trim().toLowerCase();
+  catsEl.querySelectorAll(".cat").forEach(b => {
+    const id = b.dataset.id;
+    const n = TOOLS.filter(t => (id==="all"||t.c===id) && !(nologin.checked && t.login==="free") &&
+      (!term || term.split(/\s+/).every(w => [t.n,t.d,catLabel(t.c),t.out.join(" "),host(t.u)].join(" ").toLowerCase().includes(w)))).length;
+    b.querySelector(".n").textContent = n;
+    b.classList.toggle("active", id === activeCat);
+  });
+}
+
+function buildCats(){
+  const all = [{id:"all",label:"All tools"}, ...CATEGORIES];
+  all.forEach(c => {
+    const b = document.createElement("button");
+    b.className = "cat"; b.dataset.id = c.id; b.type = "button";
+    b.innerHTML = `<span>${esc(c.label)}</span><span class="n">0</span>`;
+    b.addEventListener("click", () => { activeCat = c.id; render(); });
+    catsEl.appendChild(b);
+  });
+}
+
+/* stats */
+$("#statTools").textContent = TOOLS.length;
+$("#statCats").textContent = CATEGORIES.length;
+$("#statNoLogin").textContent = TOOLS.filter(t => t.login === "none").length;
+
+buildCats(); render();
+q.addEventListener("input", render);
+nologin.addEventListener("change", render);
+document.addEventListener("keydown", e => {
+  if (e.key === "/" && document.activeElement !== q) { e.preventDefault(); q.focus(); }
+  if (e.key === "Escape") { q.value = ""; q.blur(); render(); }
+});
+</script>
+</body>
+</html>
